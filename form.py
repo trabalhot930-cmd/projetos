@@ -8,20 +8,30 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# 1. CONFIGURAÇÃO DA PÁGINA
-st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
+# 1. CONFIGURAÇÃO DA PÁGINA (Ajuste de largura para mobile)
+st.set_page_config(
+    page_title="Triagem Jurídica - Dra. Lethicia Fernanda", 
+    page_icon="🦋",
+    layout="centered"
+)
 
-# 2. ESTILO PREMIUM E ANIMAÇÃO DE BORBOLETAS
+# 2. ESTILO PREMIUM E AJUSTES DE RESPONSIVIDADE (CSS)
 st.markdown("""
     <style>
     .stApp { background-color: #fdfafb; }
     .header-bordo {
         background: linear-gradient(90deg, #70161e, #8c1c24);
-        padding: 40px; text-align: center; border-radius: 15px; margin-bottom: 25px;
+        padding: 25px 15px; text-align: center; border-radius: 15px; margin-bottom: 20px;
+    }
+    /* Ajuste de fonte para telas menores */
+    @media (max-width: 600px) {
+        .header-bordo h1 { font-size: 22px !important; }
+        .header-bordo p { font-size: 11px !important; }
     }
     .stButton>button {
         width: 100%; background-color: #70161e; color: white; 
-        font-weight: bold; padding: 18px; border-radius: 10px; border: none;
+        font-weight: bold; padding: 15px; border-radius: 10px; border: none;
+        font-size: 16px;
     }
     @keyframes fly {
         0% { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -45,7 +55,6 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # SENHA DE APP GERADA NO GOOGLE
     senha_app = "ozmj zrks dnkk ymks" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
@@ -67,7 +76,7 @@ def enviar_email_gmail(dados):
         <p><b>Relatório:</b> {dados['Relatorio']} | <b>Exames:</b> {dados['Exames']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
-        <p><b>Resumo do Caso:</b><br>{dados['Detalhes']}</p>
+        <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
     </div>
     """
     msg.attach(MIMEText(corpo_html, 'html'))
@@ -80,30 +89,29 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO DE TRIAGEM
+# 5. FORMULÁRIO DE TRIAGEM (Layout Mobile Optimized)
 with st.form("form_triagem"):
     st.markdown("### 👤 Seus Dados")
-    c1, c2 = st.columns([3, 1])
-    with c1: 
-        nome = st.text_input("Nome completo")
-    with c2: 
+    nome = st.text_input("Nome completo")
+    
+    # No celular, é melhor deixar idade e sexo um abaixo do outro ou em colunas simples
+    c1, c2 = st.columns([1, 1])
+    with c1:
         idade = st.number_input("Idade", min_value=0, max_value=110, value=30)
+    with c2:
+        sexo = st.selectbox("Sexo:", ["Feminino", "Masculino", "Outro"], index=None)
     
-    sexo = st.radio("Sexo:", ["Feminino", "Masculino", "Outro"], index=None, horizontal=True)
+    tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, placeholder="Ex: 91988887777")
+    localidade = st.text_input("Cidade e Estado")
     
-    c3, c4 = st.columns(2)
-    with c3: 
-        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11)
-    with c4: 
-        localidade = st.text_input("Cidade e Estado")
-    
-    # Formatação automática do WhatsApp
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
 
     st.divider()
     st.markdown("### 🏥 Sobre o Atendimento")
-    origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
+    origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None, horizontal=True)
+    
+    # Situação em lista vertical para não cortar no celular
     situacao = st.radio("O que aconteceu?", [
         "Negativa de tratamento/cirurgia", 
         "Demora excessiva na fila", 
@@ -113,11 +121,12 @@ with st.form("form_triagem"):
 
     st.divider()
     st.markdown("### 📄 Documentação e Urgência")
-    tem_relatorio = st.radio("Possui Relatório Médico?", ["Sim", "Não", "Em emissão"], horizontal=True)
-    tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], horizontal=True)
-    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"])
+    tem_relatorio = st.radio("Possui Relatório Médico?", ["Sim", "Não", "Em emissão"], index=None)
+    tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], index=None)
+    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"], index=None)
     detalhes = st.text_area("Explique seu caso resumidamente:")
 
+    st.markdown("<br>", unsafe_allow_html=True)
     btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
 
 # 6. LÓGICA DE PROCESSAMENTO
@@ -132,8 +141,7 @@ if btn_enviar:
             "Exames": tem_exames, "Urgencia": urgencia, "Detalhes": detalhes
         }
 
-        with st.spinner('Enviando solicitação...'):
-            # Salvamento no CSV (oculto do cliente)
+        with st.spinner('Enviando...'):
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
             if not os.path.isfile(arquivo):
@@ -141,12 +149,10 @@ if btn_enviar:
             else:
                 df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
             
-            # Envio do E-mail
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            # Efeito de Borboletas voando 🦋
-            for pos in [10, 30, 50, 70, 90]:
+            for pos in [15, 35, 55, 75, 95]:
                 st.markdown(f'<div class="butterfly" style="left:{pos}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
             st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
             time.sleep(2)
