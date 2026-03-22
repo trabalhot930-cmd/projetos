@@ -38,8 +38,8 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL (GMAIL)
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # INSIRA A SENHA DE 16 LETRAS GERADA NO GOOGLE (SENHAS DE APP)
-    senha_app = "COLOQUE_AQUI_SUA_SENHA_DE_16_LETRAS" 
+    # IMPORTANTE: Use a senha de 16 letras gerada no Google (Senhas de App)
+    senha_app = "SUA_SENHA_DE_16_LETRAS_AQUI" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
@@ -59,11 +59,10 @@ def enviar_email_gmail(dados):
         <p><b>Atendimento:</b> {dados['Origem']}</p>
         <p><b>Situação:</b> {dados['Situacao']}</p>
         <p><b>Relatório Médico:</b> {dados['Relatorio']}</p>
-        <p><b>Status Exames:</b> {dados['Status_Exames']}</p>
-        <p><b>Lista de Exames:</b> {dados['Lista_Exames']}</p>
+        <p><b>Exames:</b> {dados['Status_Exames']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
-        <p><b>Resumo do Caso:</b><br>{dados['Detalhes']}</p>
+        <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
     </div>
     """
     msg.attach(MIMEText(corpo_html, 'html'))
@@ -78,29 +77,29 @@ def enviar_email_gmail(dados):
         return False, str(e)
 
 # 5. FORMULÁRIO DE TRIAGEM COMPLETO
-with st.form("form_triagem_completo"):
+with st.form("form_triagem"):
     st.markdown("### 👤 Perfil do Cliente")
     c1, c2 = st.columns([3, 1])
     with c1:
         nome = st.text_input("Nome completo")
     with c2:
-        idade = st.number_input("Idade", min_value=0, max_value=110, value=35)
+        idade = st.number_input("Idade", min_value=0, max_value=110, value=30)
     
     sexo = st.radio("Sexo:", ["Feminino", "Masculino", "Outro"], index=None, horizontal=True)
     
     c3, c4 = st.columns(2)
     with c3:
-        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, help="Digite apenas números")
+        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, help="Apenas números")
     with c4:
         localidade = st.text_input("Cidade e Estado")
     
-    # Lógica de formatação do WhatsApp
+    # Lógica de formatação do WhatsApp (XX) XXXXX-XXXX
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
 
     st.divider()
 
-    st.markdown("### 🏥 Sobre o Atendimento e Caso")
+    st.markdown("### 🏥 Sobre o Atendimento")
     origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
     situacao = st.selectbox("O que aconteceu?", [
         "Meu plano de saúde negou um tratamento/cirurgia", 
@@ -112,21 +111,9 @@ with st.form("form_triagem_completo"):
 
     st.divider()
 
-    st.markdown("### 📄 Documentação e Exames")
+    st.markdown("### 📄 Documentação e Urgência")
     tem_relatorio = st.radio("Possui Relatório Médico ou Pedido de Urgência?", ["Sim", "Não", "Em emissão"], horizontal=True)
-    tem_exames = st.radio("Possui exames que comprovam a necessidade?", ["Sim, atualizados", "Sim, mas antigos", "Não possuo"], horizontal=True)
-    quais_exames = st.text_input("Quais exames você já tem? (Ex: Ressonância, Biópsia...)")
-
-    st.divider()
-
-    st.markdown("### 🚨 Gravidade")
-    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar alguns dias", "Não é urgente"])
+    tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], horizontal=True)
+    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"])
+    
     detalhes = st.text_area("Explique seu caso resumidamente:")
-
-    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
-
-# 6. PROCESSAMENTO (PLANILHA + E-MAIL)
-if btn_enviar:
-    if nome and len(nums) >= 10 and origem and sexo:
-        dados_finais = {
-            "Data": datetime.now().strftime("%
