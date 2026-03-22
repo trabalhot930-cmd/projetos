@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 # 1. CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
 
-# 2. ESTILO PREMIUM E ANIMAÇÃO DE BORBOLETAS
+# 2. ESTILO PREMIUM E ANIMAÇÃO
 st.markdown("""
     <style>
     .stApp { background-color: #fdfafb; }
@@ -23,8 +23,14 @@ st.markdown("""
         width: 100%; background-color: #70161e; color: white; 
         font-weight: bold; padding: 18px; border-radius: 10px; border: none;
     }
-    /* Estilo para esconder o menu administrativo por padrão */
-    .admin-section { border: 1px solid #eee; padding: 10px; border-radius: 10px; }
+    @keyframes fly {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+    }
+    .butterfly {
+        position: fixed; font-size: 40px; pointer-events: none; z-index: 9999;
+        animation: fly 4s linear forwards;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -39,26 +45,26 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL (GMAIL)
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    senha_app = "SUA_SENHA_DE_16_LETRAS_AQUI" # COLOQUE SUA SENHA AQUI
+    # INSIRA SUA SENHA DE 16 LETRAS ABAIXO
+    senha_app = "COLOQUE_AQUI_SUA_SENHA" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
     msg['From'] = remetente
     msg['To'] = destinatario
-    msg['Subject'] = f"NOVA TRIAGEM: {dados['Nome']} ({dados['Idade']} anos)"
+    msg['Subject'] = f"NOVA TRIAGEM: {dados['Nome']}"
 
     corpo_html = f"""
     <div style="font-family: sans-serif; color: #333;">
         <h2 style="color: #70161e;">Nova Consulta Recebida</h2>
         <p><b>Data:</b> {dados['Data']}</p>
-        <p><b>Nome:</b> {dados['Nome']}</p>
-        <p><b>Idade:</b> {dados['Idade']} | <b>Sexo:</b> {dados['Sexo']}</p>
+        <p><b>Cliente:</b> {dados['Nome']} | <b>Idade:</b> {dados['Idade']} | <b>Sexo:</b> {dados['Sexo']}</p>
         <p><b>WhatsApp:</b> {dados['WhatsApp']}</p>
+        <p><b>Localidade:</b> {dados['Localidade']}</p>
         <hr>
         <p><b>Atendimento:</b> {dados['Origem']}</p>
         <p><b>Situação:</b> {dados['Situacao']}</p>
-        <p><b>Relatório:</b> {dados['Relatorio']}</p>
-        <p><b>Exames:</b> {dados['Exames']}</p>
+        <p><b>Relatório:</b> {dados['Relatorio']} | <b>Exames:</b> {dados['Exames']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
         <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
@@ -70,12 +76,12 @@ def enviar_email_gmail(dados):
         server.login(remetente, senha_app)
         server.send_message(msg)
         server.quit()
-        return True, "Enviado"
+        return True, "Ok"
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO DE TRIAGEM
-with st.form("form_triagem_borboletas"):
+# 5. FORMULÁRIO
+with st.form("form_triagem"):
     st.markdown("### 👤 Seus Dados")
     c1, c2 = st.columns([3, 1])
     with c1: nome = st.text_input("Nome completo")
@@ -93,23 +99,18 @@ with st.form("form_triagem_borboletas"):
     st.divider()
     st.markdown("### 🏥 Sobre o Atendimento")
     origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
-    situacao = st.radio("O que aconteceu?", [
-        "Negativa de tratamento/cirurgia", 
-        "Demora excessiva na fila",
-        "Já tenho tudo pronto e preciso entrar com o processo",
-        "Outro"
-    ], index=None)
+    situacao = st.radio("O que aconteceu?", ["Negativa de tratamento/cirurgia", "Demora excessiva na fila", "Já tenho tudo pronto", "Outro"], index=None)
 
     st.divider()
-    st.markdown("### 📄 Documentação e Urgência")
+    st.markdown("### 📄 Documentação")
     tem_relatorio = st.radio("Possui Relatório Médico?", ["Sim", "Não", "Em emissão"], horizontal=True)
     tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], horizontal=True)
     urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"])
     detalhes = st.text_area("Explique seu caso resumidamente:")
 
-    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
+    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
 
-# 6. LÓGICA DE SUCESSO E BORBOLETAS
+# 6. PROCESSAMENTO
 if btn_enviar:
     if nome and len(nums) >= 10 and origem and sexo:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -121,37 +122,7 @@ if btn_enviar:
         }
 
         with st.spinner('Enviando...'):
-            # Salvar CSV
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
             if not os.path.isfile(arquivo):
-                df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
-            else:
-                df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
-
-            sucesso, erro = enviar_email_gmail(dados_finais)
-
-        if sucesso:
-            # Efeito de Borboletas customizado
-            st.markdown("""
-                <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;">
-                    <div style="font-size: 50px; position: absolute; animation: fly 4s linear forwards; left: 10%; top: 100%;">🦋</div>
-                    <div style="font-size: 40px; position: absolute; animation: fly 3s linear forwards; left: 30%; top: 100%;">🦋</div>
-                    <div style="font-size: 60px; position: absolute; animation: fly 5s linear forwards; left: 50%; top: 100%;">🦋</div>
-                    <div style="font-size: 45px; position: absolute; animation: fly 3.5s linear forwards; left: 70%; top: 100%;">🦋</div>
-                    <div style="font-size: 55px; position: absolute; animation: fly 4.5s linear forwards; left: 90%; top: 100%;">🦋</div>
-                </div>
-                <style>
-                @keyframes fly {
-                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
-                }
-                </style>
-                """, unsafe_allow_html=True)
-            
-            st.success(f"✅ Recebido! Dra. Lethicia entrará em contato em breve.")
-            time.sleep(2) # Pausa para ver as borboletas
-        else:
-            st.error(f"Erro: {erro}")
-    else:
-        st.warning("⚠️ Preencha Nome
+                df_novo.to_csv(arquivo,
