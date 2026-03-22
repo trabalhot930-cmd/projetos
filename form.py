@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 # 1. CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
 
-# 2. ESTILO PREMIUM BORDÔ
+# 2. ESTILO PREMIUM BORDÔ (CSS)
 st.markdown("""
     <style>
     .stApp { background-color: #fdfafb; }
@@ -18,6 +18,7 @@ st.markdown("""
         width: 100%; background-color: #70161e; color: white; 
         font-weight: bold; padding: 18px; border-radius: 10px; border: none;
     }
+    .stButton>button:hover { background-color: #5a1218; }
     h3 { color: #70161e !important; padding-top: 15px; }
     </style>
     """, unsafe_allow_html=True)
@@ -33,7 +34,7 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL (SMTP)
 def enviar_email_lead(dados):
     remetente = "lethiciafernanda.adv@outlook.com"
-    # IMPORTANTE: Coloque aqui a Senha de App de 16 dígitos gerada na conta Microsoft
+    # Sua Senha de App de 25 dígitos gerada na conta Microsoft
     senha_app = "WMUPP-SK3Q3-GKSC2-Z3GS6-65UYM" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
@@ -45,14 +46,14 @@ def enviar_email_lead(dados):
     corpo_html = f"""
     <h3>Dados da Triagem - Direito da Saúde</h3>
     <p><b>Nome:</b> {dados['nome']}</p>
-    <p><b>WhatsApp do Cliente:</b> {dados['whatsapp']}</p>
+    <p><b>WhatsApp:</b> {dados['whatsapp']}</p>
     <p><b>Localidade:</b> {dados['localidade']}</p>
     <hr>
     <p><b>Canal:</b> {dados['origem']}</p>
     <p><b>Situação:</b> {dados['situacao']}</p>
     <p><b>Relatório Médico/Urgência:</b> {dados['relatorio']}</p>
     <p><b>Status dos Exames:</b> {dados['exames_status']}</p>
-    <p><b>Exames que possui:</b> {dados['exames_lista']}</p>
+    <p><b>Lista de Exames:</b> {dados['exames_lista']}</p>
     <p><b>Urgência:</b> {dados['urgencia']}</p>
     <hr>
     <p><b>Resumo do Caso:</b><br>{dados['detalhes']}</p>
@@ -67,9 +68,10 @@ def enviar_email_lead(dados):
         server.quit()
         return True
     except Exception as e:
+        print(f"Erro no envio: {e}")
         return False
 
-# 5. FORMULÁRIO
+# 5. FORMULÁRIO DE TRIAGEM
 with st.form("form_triagem"):
     st.markdown("### 📌 Seus Dados")
     nome = st.text_input("Nome completo")
@@ -102,7 +104,7 @@ with st.form("form_triagem"):
 
     btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
 
-# 6. LÓGICA DE FINALIZAÇÃO
+# 6. LÓGICA DE FINALIZAÇÃO (PÓS-BOTÃO)
 if btn_enviar:
     if nome and whatsapp_cliente and origem:
         dados_finais = {
@@ -112,13 +114,12 @@ if btn_enviar:
             "urgencia": urgencia, "detalhes": detalhes
         }
 
-        # Tenta enviar o e-mail em segundo plano
-        with st.spinner('Enviando seus dados...'):
-            enviou = enviar_email_lead(dados_finais)
+        with st.spinner('Enviando para a Dra. Lethicia...'):
+            sucesso = enviar_email_lead(dados_finais)
 
-        if enviou:
-            st.success(f"✅ Obrigado, {nome}! Seus dados foram enviados com sucesso para a Dra. Lethicia Fernanda. Aguarde o retorno.")
+        if sucesso:
+            st.success(f"✅ Sucesso, {nome}! Seus dados foram enviados. A Dra. Lethicia analisará e entrará em contato em breve.")
         else:
-            st.error("Houve um erro técnico ao processar o envio. Por favor, tente novamente em instantes.")
+            st.error("Houve um erro técnico no envio. Por favor, tente novamente em alguns instantes.")
     else:
-        st.error("Por favor, preencha todos os campos obrigatórios (Nome, WhatsApp e tipo de atendimento).")
+        st.error("Por favor, preencha o Nome, WhatsApp e tipo de atendimento.")
