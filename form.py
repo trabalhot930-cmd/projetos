@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 # 1. CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
 
-# 2. ESTILO E ANIMAÇÃO DE BORBOLETAS
+# 2. ESTILO PREMIUM E ANIMAÇÃO DE BORBOLETAS
 st.markdown("""
     <style>
     .stApp { background-color: #fdfafb; }
@@ -45,8 +45,8 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # COLOQUE SUA SENHA DE 16 LETRAS DO GOOGLE ABAIXO
-    senha_app = "COLOQUE_AQUI_SUA_SENHA" 
+    # SENHA DE APP GERADA NO GOOGLE
+    senha_app = "ozmj zrks dnkk ymks" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
@@ -67,7 +67,7 @@ def enviar_email_gmail(dados):
         <p><b>Relatório:</b> {dados['Relatorio']} | <b>Exames:</b> {dados['Exames']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
-        <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
+        <p><b>Resumo do Caso:</b><br>{dados['Detalhes']}</p>
     </div>
     """
     msg.attach(MIMEText(corpo_html, 'html'))
@@ -97,6 +97,7 @@ with st.form("form_triagem"):
     with c4: 
         localidade = st.text_input("Cidade e Estado")
     
+    # Formatação automática do WhatsApp
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
 
@@ -124,36 +125,27 @@ if btn_enviar:
     if nome and len(nums) >= 10 and origem and sexo:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
         
-        # Dicionário de dados organizado
         dados_finais = {
-            "Data": agora, 
-            "Nome": nome, 
-            "Idade": idade, 
-            "Sexo": sexo, 
-            "WhatsApp": whatsapp_formatado, 
-            "Localidade": localidade, 
-            "Origem": origem, 
-            "Situacao": situacao, 
-            "Relatorio": tem_relatorio, 
-            "Exames": tem_exames, 
-            "Urgencia": urgencia, 
-            "Detalhes": detalhes
+            "Data": agora, "Nome": nome, "Idade": idade, "Sexo": sexo, 
+            "WhatsApp": whatsapp_formatado, "Localidade": localidade, 
+            "Origem": origem, "Situacao": situacao, "Relatorio": tem_relatorio, 
+            "Exames": tem_exames, "Urgencia": urgencia, "Detalhes": detalhes
         }
 
         with st.spinner('Enviando solicitação...'):
-            # SALVAMENTO SILENCIOSO NO ARQUIVO CSV
+            # Salvamento no CSV (oculto do cliente)
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
-            
             if not os.path.isfile(arquivo):
                 df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
             else:
                 df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
             
+            # Envio do E-mail
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            # DISPARO DE BORBOLETAS 🦋
+            # Efeito de Borboletas voando 🦋
             for pos in [10, 30, 50, 70, 90]:
                 st.markdown(f'<div class="butterfly" style="left:{pos}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
             st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
@@ -162,6 +154,3 @@ if btn_enviar:
             st.error(f"Erro no envio: {erro}")
     else:
         st.warning("⚠️ Preencha Nome, Idade, Sexo, WhatsApp e Atendimento.")
-
-# A ÁREA ADMINISTRATIVA FOI REMOVIDA PARA PRIVACIDADE TOTAL DO CLIENTE.
-# OS DADOS SÃO SALVOS AUTOMATICAMENTE NO ARQUIVO 'leads_completos.csv'.
