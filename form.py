@@ -34,7 +34,7 @@ st.markdown("""
 def enviar_email_lead(dados):
     remetente = "lethiciafernanda.adv@outlook.com"
     # IMPORTANTE: Coloque aqui a Senha de App de 16 dígitos gerada na conta Microsoft
-    senha_app = "SUA_SENHA_DE_APP_GERADA_AQUI" 
+    senha_app = "WMUPP-SK3Q3-GKSC2-Z3GS6-65UYM" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
