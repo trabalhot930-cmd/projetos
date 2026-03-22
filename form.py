@@ -45,7 +45,7 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # COLOQUE SUA SENHA DE 16 LETRAS ABAIXO
+    # COLOQUE SUA SENHA DE 16 LETRAS DO GOOGLE ABAIXO
     senha_app = "COLOQUE_AQUI_SUA_SENHA" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
@@ -80,7 +80,7 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO
+# 5. FORMULÁRIO DE TRIAGEM
 with st.form("form_triagem"):
     st.markdown("### 👤 Seus Dados")
     c1, c2 = st.columns([3, 1])
@@ -103,30 +103,48 @@ with st.form("form_triagem"):
     st.divider()
     st.markdown("### 🏥 Sobre o Atendimento")
     origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
-    situacao = st.radio("O que aconteceu?", ["Negativa de tratamento/cirurgia", "Demora excessiva na fila", "Já tenho tudo pronto", "Outro"], index=None)
+    situacao = st.radio("O que aconteceu?", [
+        "Negativa de tratamento/cirurgia", 
+        "Demora excessiva na fila", 
+        "Já tenho tudo pronto e preciso entrar com o processo", 
+        "Outro"
+    ], index=None)
 
     st.divider()
-    st.markdown("### 📄 Documentação")
+    st.markdown("### 📄 Documentação e Urgência")
     tem_relatorio = st.radio("Possui Relatório Médico?", ["Sim", "Não", "Em emissão"], horizontal=True)
     tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], horizontal=True)
     urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"])
     detalhes = st.text_area("Explique seu caso resumidamente:")
 
-    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
+    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
 
-# 6. PROCESSAMENTO
+# 6. LÓGICA DE PROCESSAMENTO
 if btn_enviar:
     if nome and len(nums) >= 10 and origem and sexo:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
         
-        # Dicionário de dados sem quebras de linha internas para evitar erros
-        dados_finais = {"Data": agora, "Nome": nome, "Idade": idade, "Sexo": sexo, "WhatsApp": whatsapp_formatado, "Localidade": localidade, "Origem": origem, "Situacao": situacao, "Relatorio": tem_relatorio, "Exames": tem_exames, "Urgencia": urgencia, "Detalhes": detalhes}
+        # Dicionário de dados organizado
+        dados_finais = {
+            "Data": agora, 
+            "Nome": nome, 
+            "Idade": idade, 
+            "Sexo": sexo, 
+            "WhatsApp": whatsapp_formatado, 
+            "Localidade": localidade, 
+            "Origem": origem, 
+            "Situacao": situacao, 
+            "Relatorio": tem_relatorio, 
+            "Exames": tem_exames, 
+            "Urgencia": urgencia, 
+            "Detalhes": detalhes
+        }
 
-        with st.spinner('Enviando...'):
+        with st.spinner('Enviando solicitação...'):
+            # SALVAMENTO SILENCIOSO NO ARQUIVO CSV
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
             
-            # Bloco de salvamento corrigido
             if not os.path.isfile(arquivo):
                 df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
             else:
@@ -135,22 +153,15 @@ if btn_enviar:
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            # Efeito Borboleta 🦋
-            for pos in range(10, 100, 20):
+            # DISPARO DE BORBOLETAS 🦋
+            for pos in [10, 30, 50, 70, 90]:
                 st.markdown(f'<div class="butterfly" style="left:{pos}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
             st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
             time.sleep(2)
         else:
-            st.error(f"Erro no e-mail: {erro}")
+            st.error(f"Erro no envio: {erro}")
     else:
         st.warning("⚠️ Preencha Nome, Idade, Sexo, WhatsApp e Atendimento.")
 
-# 7. ÁREA ADMINISTRATIVA PRIVADA
-st.write("---")
-with st.expander("🔐 Área Administrativa"):
-    senha_acesso = st.text_input("Senha:", type="password")
-    if senha_acesso == "admin123":
-        if os.path.exists("leads_completos.csv"):
-            df_adm = pd.read_csv("leads_completos.csv", sep=';')
-            st.write(f"Total de Leads: {len(df_adm)}")
-            st.download_button("📥 Baixar Planilha", df_adm.to_csv(index=False, sep=';',
+# A ÁREA ADMINISTRATIVA FOI REMOVIDA PARA PRIVACIDADE TOTAL DO CLIENTE.
+# OS DADOS SÃO SALVOS AUTOMATICAMENTE NO ARQUIVO 'leads_completos.csv'.
