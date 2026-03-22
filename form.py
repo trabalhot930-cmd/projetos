@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 # 1. CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
 
-# 2. ESTILO PREMIUM E ANIMAÇÃO
+# 2. ESTILO E ANIMAÇÃO DE BORBOLETAS
 st.markdown("""
     <style>
     .stApp { background-color: #fdfafb; }
@@ -42,10 +42,10 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 4. FUNÇÃO DE ENVIO DE E-MAIL (GMAIL)
+# 4. FUNÇÃO DE ENVIO DE E-MAIL
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # INSIRA SUA SENHA DE 16 LETRAS ABAIXO
+    # COLOQUE SUA SENHA DE 16 LETRAS ABAIXO
     senha_app = "COLOQUE_AQUI_SUA_SENHA" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
@@ -84,14 +84,18 @@ def enviar_email_gmail(dados):
 with st.form("form_triagem"):
     st.markdown("### 👤 Seus Dados")
     c1, c2 = st.columns([3, 1])
-    with c1: nome = st.text_input("Nome completo")
-    with c2: idade = st.number_input("Idade", min_value=0, max_value=110, value=30)
+    with c1: 
+        nome = st.text_input("Nome completo")
+    with c2: 
+        idade = st.number_input("Idade", min_value=0, max_value=110, value=30)
     
     sexo = st.radio("Sexo:", ["Feminino", "Masculino", "Outro"], index=None, horizontal=True)
     
     c3, c4 = st.columns(2)
-    with c3: tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11)
-    with c4: localidade = st.text_input("Cidade e Estado")
+    with c3: 
+        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11)
+    with c4: 
+        localidade = st.text_input("Cidade e Estado")
     
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
@@ -114,15 +118,39 @@ with st.form("form_triagem"):
 if btn_enviar:
     if nome and len(nums) >= 10 and origem and sexo:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-        dados_finais = {
-            "Data": agora, "Nome": nome, "Idade": idade, "Sexo": sexo,
-            "WhatsApp": whatsapp_formatado, "Localidade": localidade,
-            "Origem": origem, "Situacao": situacao, "Relatorio": tem_relatorio,
-            "Exames": tem_exames, "Urgencia": urgencia, "Detalhes": detalhes
-        }
+        
+        # Dicionário de dados sem quebras de linha internas para evitar erros
+        dados_finais = {"Data": agora, "Nome": nome, "Idade": idade, "Sexo": sexo, "WhatsApp": whatsapp_formatado, "Localidade": localidade, "Origem": origem, "Situacao": situacao, "Relatorio": tem_relatorio, "Exames": tem_exames, "Urgencia": urgencia, "Detalhes": detalhes}
 
         with st.spinner('Enviando...'):
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
+            
+            # Bloco de salvamento corrigido
             if not os.path.isfile(arquivo):
-                df_novo.to_csv(arquivo,
+                df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
+            else:
+                df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
+            
+            sucesso, erro = enviar_email_gmail(dados_finais)
+
+        if sucesso:
+            # Efeito Borboleta 🦋
+            for pos in range(10, 100, 20):
+                st.markdown(f'<div class="butterfly" style="left:{pos}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
+            st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
+            time.sleep(2)
+        else:
+            st.error(f"Erro no e-mail: {erro}")
+    else:
+        st.warning("⚠️ Preencha Nome, Idade, Sexo, WhatsApp e Atendimento.")
+
+# 7. ÁREA ADMINISTRATIVA PRIVADA
+st.write("---")
+with st.expander("🔐 Área Administrativa"):
+    senha_acesso = st.text_input("Senha:", type="password")
+    if senha_acesso == "admin123":
+        if os.path.exists("leads_completos.csv"):
+            df_adm = pd.read_csv("leads_completos.csv", sep=';')
+            st.write(f"Total de Leads: {len(df_adm)}")
+            st.download_button("📥 Baixar Planilha", df_adm.to_csv(index=False, sep=';',
