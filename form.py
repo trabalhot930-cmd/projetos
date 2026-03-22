@@ -38,7 +38,7 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL (GMAIL)
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # Lembre-se de inserir a senha de 16 letras gerada no Google aqui
+    # INSIRA A SENHA DE 16 LETRAS GERADA NO GOOGLE (SENHAS DE APP)
     senha_app = "COLOQUE_AQUI_SUA_SENHA_DE_16_LETRAS" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
@@ -52,15 +52,18 @@ def enviar_email_gmail(dados):
         <h2 style="color: #70161e;">Nova Consulta Recebida</h2>
         <p><b>Data:</b> {dados['Data']}</p>
         <p><b>Nome:</b> {dados['Nome']}</p>
-        <p><b>Idade:</b> {dados['Idade']} anos</p>
-        <p><b>Sexo:</b> {dados['Sexo']}</p>
+        <p><b>Idade:</b> {dados['Idade']} anos | <b>Sexo:</b> {dados['Sexo']}</p>
         <p><b>WhatsApp:</b> {dados['WhatsApp']}</p>
         <p><b>Localidade:</b> {dados['Localidade']}</p>
         <hr>
         <p><b>Atendimento:</b> {dados['Origem']}</p>
         <p><b>Situação:</b> {dados['Situacao']}</p>
+        <p><b>Relatório Médico:</b> {dados['Relatorio']}</p>
+        <p><b>Status Exames:</b> {dados['Status_Exames']}</p>
+        <p><b>Lista de Exames:</b> {dados['Lista_Exames']}</p>
+        <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
-        <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
+        <p><b>Resumo do Caso:</b><br>{dados['Detalhes']}</p>
     </div>
     """
     msg.attach(MIMEText(corpo_html, 'html'))
@@ -74,88 +77,56 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO DE TRIAGEM
-with st.form("form_triagem_publico"):
+# 5. FORMULÁRIO DE TRIAGEM COMPLETO
+with st.form("form_triagem_completo"):
     st.markdown("### 👤 Perfil do Cliente")
-    col1, col2 = st.columns([2, 1])
-    with col1:
+    c1, c2 = st.columns([3, 1])
+    with c1:
         nome = st.text_input("Nome completo")
-    with col2:
-        idade = st.number_input("Idade", min_value=0, max_value=120, value=30)
+    with c2:
+        idade = st.number_input("Idade", min_value=0, max_value=110, value=35)
     
-    sexo = st.radio("Sexo:", ["Feminino", "Masculino", "Prefiro não informar"], index=None, horizontal=True)
+    sexo = st.radio("Sexo:", ["Feminino", "Masculino", "Outro"], index=None, horizontal=True)
     
-    col3, col4 = st.columns(2)
-    with col3:
-        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, help="Apenas números")
-    with col4:
-        localidade = st.text_input("Cidade/Estado")
+    c3, c4 = st.columns(2)
+    with c3:
+        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, help="Digite apenas números")
+    with c4:
+        localidade = st.text_input("Cidade e Estado")
     
-    # Lógica de formatação (XX) XXXXX-XXXX
+    # Lógica de formatação do WhatsApp
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
 
     st.divider()
 
-    st.markdown("### 🏥 Sobre o Atendimento")
-    origem = st.radio("Atendimento via:", ["Plano de Saúde", "SUS"], index=None)
+    st.markdown("### 🏥 Sobre o Atendimento e Caso")
+    origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
     situacao = st.selectbox("O que aconteceu?", [
-        "Negativa de tratamento/cirurgia pelo Plano", 
-        "Demora excessiva na fila do SUS",
-        "Home Care / Medicamentos de alto custo",
-        "Reajuste abusivo de mensalidade",
+        "Meu plano de saúde negou um tratamento/cirurgia", 
+        "Estou aguardando pelo SUS e está demorando muito",
+        "Já tenho tudo pronto e preciso entrar com o processo",
+        "Já entrei com processo, mas não estou satisfeito(a)",
         "Outro"
     ], index=None)
 
-    detalhes = st.text_area("Descreva brevemente o seu caso:")
+    st.divider()
 
-    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
+    st.markdown("### 📄 Documentação e Exames")
+    tem_relatorio = st.radio("Possui Relatório Médico ou Pedido de Urgência?", ["Sim", "Não", "Em emissão"], horizontal=True)
+    tem_exames = st.radio("Possui exames que comprovam a necessidade?", ["Sim, atualizados", "Sim, mas antigos", "Não possuo"], horizontal=True)
+    quais_exames = st.text_input("Quais exames você já tem? (Ex: Ressonância, Biópsia...)")
 
-# 6. PROCESSAMENTO
+    st.divider()
+
+    st.markdown("### 🚨 Gravidade")
+    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar alguns dias", "Não é urgente"])
+    detalhes = st.text_area("Explique seu caso resumidamente:")
+
+    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
+
+# 6. PROCESSAMENTO (PLANILHA + E-MAIL)
 if btn_enviar:
     if nome and len(nums) >= 10 and origem and sexo:
         dados_finais = {
-            "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "Nome": nome,
-            "Idade": idade,
-            "Sexo": sexo,
-            "WhatsApp": whatsapp_formatado,
-            "Localidade": localidade,
-            "Origem": origem,
-            "Situacao": situacao,
-            "Detalhes": detalhes
-        }
-
-        with st.spinner('Salvando dados...'):
-            # SALVAR NA PLANILHA CSV
-            arquivo = "leads_com_perfil.csv"
-            df_novo = pd.DataFrame([dados_finais])
-            if not os.path.isfile(arquivo):
-                df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
-            else:
-                df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
-
-            # ENVIAR E-MAIL
-            sucesso, erro = enviar_email_gmail(dados_finais)
-
-        if sucesso:
-            st.success(f"✅ Recebido! Dra. Lethicia entrará em contato com você em breve.")
-            st.balloons()
-        else:
-            st.error(f"Erro no envio: {erro}")
-    else:
-        st.warning("⚠️ Preencha Nome, Idade, Sexo, WhatsApp e Atendimento.")
-
-# 7. DASHBOARD SIMPLES (EXPANSÍVEL)
-with st.expander("📊 Relatório de Público (ADM)"):
-    if os.path.exists("leads_com_perfil.csv"):
-        df = pd.read_csv("leads_com_perfil.csv", sep=';')
-        st.write(f"Total de Leads: {len(df)}")
-        
-        # Mini estatística para a Dra. Lethicia
-        c1, c2 = st.columns(2)
-        c1.metric("Média de Idade", f"{int(df['Idade'].mean())} anos")
-        c2.write(df['Sexo'].value_counts())
-        
-        csv = df.to_csv(index=False, sep=';', encoding='utf-8-sig').encode('utf-8-sig')
-        st.download_button("📥 Baixar Planilha Completa", csv, "leads_perfil.csv", "text/csv")
+            "Data": datetime.now().strftime("%
