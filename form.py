@@ -15,20 +15,20 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. CSS PARA FORÇAR CORES (RESOLVE O PROBLEMA DO CELULAR PRETO)
+# 2. CSS PARA PADRONIZAÇÃO DE CORES E FUNDO CLARO
 st.markdown("""
     <style>
-    /* Forçar fundo claro em tudo */
-    .stApp, [data-testid="stAppViewContainer"] {
-        background-color: #ffffff !important;
+    /* 1. Fundo da página e dos containers sempre claro */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: #fdfafb !important;
     }
     
-    /* Forçar cor de todos os textos, labels e subheaders para PRETO */
-    h1, h2, h3, p, span, label, .stMarkdown, .stSubheader {
+    /* 2. Forçar todos os textos para cinza escuro/preto */
+    h1, h2, h3, p, span, label, div {
         color: #1a1a1a !important;
     }
 
-    /* Estilizar Título Principal */
+    /* 3. Título e Subtítulo */
     .titulo-premium {
         color: #70161e !important;
         font-size: 24px !important;
@@ -36,7 +36,6 @@ st.markdown("""
         text-align: center;
         margin-bottom: 5px;
     }
-    
     .subtitulo-premium {
         color: #8c1c24 !important;
         font-size: 11px !important;
@@ -45,30 +44,35 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* BOTÃO: Mudar de preto para Vinho/Bordô */
+    /* 4. PADRONIZAÇÃO DO FUNDO DOS ITENS (Inputs, Selects, TextAreas) */
+    /* Isso garante que todos tenham o mesmo fundo branco e bordas suaves */
+    .stTextInput>div>div>input, 
+    .stSelectbox>div>div>div, 
+    .stTextArea>div>div>textarea,
+    .stNumberInput>div>div>input {
+        background-color: #ffffff !important;
+        color: #1a1a1a !important;
+        border: 1px solid #eeeeee !important;
+        border-radius: 8px !important;
+    }
+
+    /* 5. Botão em Vinho/Bordô */
     div.stButton > button {
         background-color: #70161e !important;
-        color: white !important;
+        color: #ffffff !important;
         border-radius: 8px !important;
         border: none !important;
         padding: 15px !important;
         font-weight: bold !important;
         width: 100% !important;
+        transition: 0.3s;
+    }
+    div.stButton > button:hover {
+        background-color: #8c1c24 !important;
+        color: #ffffff !important;
     }
 
-    /* Campos de entrada (Inputs) com borda visível */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea>div>div>textarea {
-        background-color: #f9f9f9 !important;
-        color: #1a1a1a !important;
-        border: 1px solid #ddd !important;
-    }
-
-    /* Ajuste para botões de rádio (SUS/Plano) */
-    [data-testid="stMarkdownContainer"] p {
-        font-weight: 500 !important;
-    }
-
-    /* Animação das Borboletas */
+    /* 6. Animação das Borboletas */
     @keyframes flyUp {
         0% { transform: translateY(0) rotate(0deg); opacity: 1; }
         100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
@@ -97,12 +101,12 @@ def enviar_email_gmail(dados):
     msg['Subject'] = f"NOVA TRIAGEM: {dados['Nome']}"
 
     corpo_html = f"""
-    <div style="font-family: sans-serif; color: #333; padding: 20px;">
+    <div style="font-family: sans-serif; color: #333; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: #70161e;">Nova Consulta Recebida</h2>
         <p><b>Data:</b> {dados['Data']}</p>
         <p><b>Cliente:</b> {dados['Nome']} | <b>Idade:</b> {dados['Idade']}</p>
         <p><b>WhatsApp:</b> {dados['WhatsApp']}</p>
-        <hr>
+        <hr style="border: 0; border-top: 1px solid #eee;">
         <p><b>Situação:</b> {dados['Situacao']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
@@ -118,19 +122,19 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO (Usando labels curtas para mobile)
-with st.form("form_triagem_mobile_v2"):
+# 5. FORMULÁRIO (Itens com fundo padronizado)
+with st.form("form_triagem_final"):
     st.subheader("👤 Seus Dados")
-    nome = st.text_input("Nome completo", placeholder="Como podemos te chamar?")
+    nome = st.text_input("Nome completo")
     
-    col_id, col_sx = st.columns(2)
-    with col_id:
+    col_a, col_b = st.columns(2)
+    with col_a:
         idade = st.number_input("Idade", min_value=0, value=30)
-    with col_sx:
+    with col_b:
         sexo = st.selectbox("Sexo:", ["Feminino", "Masculino", "Outro"], index=None)
     
     tel_raw = st.text_input("WhatsApp (com DDD)", placeholder="91988887777")
-    localidade = st.text_input("Cidade e Estado", placeholder="Ex: Belém/PA")
+    localidade = st.text_input("Cidade e Estado")
     
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
@@ -145,6 +149,7 @@ with st.form("form_triagem_mobile_v2"):
     urgencia = st.select_slider("Qual a urgência?", options=["Baixa", "Média", "Alta"], value="Média")
     detalhes = st.text_area("Resumo do caso (opcional):")
 
+    # Botão de Envio
     btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
 
 # 6. PROCESSAMENTO E BORBOLETAS
@@ -164,7 +169,7 @@ if btn_enviar:
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            # Borboletas 🦋
+            # Borboletas voando 🦋
             for i in range(10, 100, 20):
                 st.markdown(f'<div class="butterfly-anim" style="left:{i}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
             st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
