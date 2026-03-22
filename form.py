@@ -39,7 +39,7 @@ st.markdown("""
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
     # IMPORTANTE: Use a senha de 16 letras gerada no Google (Senhas de App)
-    senha_app = "SUA_SENHA_DE_16_LETRAS_AQUI" 
+    senha_app = "ozmj zrks dnkk ymks" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
