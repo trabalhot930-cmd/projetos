@@ -38,8 +38,8 @@ st.markdown("""
 # 4. FUNÇÃO DE ENVIO DE E-MAIL (GMAIL)
 def enviar_email_gmail(dados):
     remetente = "lethiciafernanda14@gmail.com"
-    # INSIRA A SENHA DE 16 LETRAS GERADA NO GOOGLE (SENHAS DE APP)
-    senha_app = "COLOQUE_AQUI_SUA_SENHA_DE_16_LETRAS" 
+    # IMPORTANTE: Use a senha de 16 letras gerada no Google (Senhas de App)
+    senha_app = "SUA_SENHA_DE_16_LETRAS_AQUI" 
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
@@ -59,8 +59,7 @@ def enviar_email_gmail(dados):
         <p><b>Atendimento:</b> {dados['Origem']}</p>
         <p><b>Situação:</b> {dados['Situacao']}</p>
         <p><b>Relatório Médico:</b> {dados['Relatorio']}</p>
-        <p><b>Status dos Exames:</b> {dados['Status_Exames']}</p>
-        <p><b>Quais Exames:</b> {dados['Lista_Exames']}</p>
+        <p><b>Exames Atualizados:</b> {dados['Exames']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <hr>
         <p><b>Resumo do Caso:</b><br>{dados['Detalhes']}</p>
@@ -77,8 +76,8 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO DE TRIAGEM COMPLETO
-with st.form("form_triagem_completo"):
+# 5. FORMULÁRIO DE TRIAGEM
+with st.form("form_triagem_final"):
     st.markdown("### 👤 Perfil do Cliente")
     c1, c2 = st.columns([3, 1])
     with c1:
@@ -90,11 +89,11 @@ with st.form("form_triagem_completo"):
     
     c3, c4 = st.columns(2)
     with c3:
-        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11, help="Digite apenas números")
+        tel_raw = st.text_input("WhatsApp (com DDD)", max_chars=11)
     with c4:
         localidade = st.text_input("Cidade e Estado")
     
-    # Formatação automática do WhatsApp
+    # Formatação automática do WhatsApp (XX) XXXXX-XXXX
     nums = re.sub(r'\D', '', tel_raw)
     whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
 
@@ -102,32 +101,26 @@ with st.form("form_triagem_completo"):
 
     st.markdown("### 🏥 Sobre o Atendimento")
     origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
-    situacao = st.selectbox("Qual dessas situações mais se parece com a sua?", [
-        "Meu plano de saúde negou um tratamento/cirurgia", 
-        "Estou aguardando pelo SUS e está demorando muito",
+    situacao = st.radio("O que aconteceu?", [
+        "Negativa de tratamento/cirurgia", 
+        "Demora excessiva na fila",
         "Já tenho tudo pronto e preciso entrar com o processo",
-        "Já entrei com processo, mas não estou satisfeito(a)",
         "Outro"
     ], index=None)
 
     st.divider()
 
-    st.markdown("### 📄 Documentação e Exames")
-    tem_relatorio = st.radio("Possui Relatório Médico ou Pedido de Urgência?", ["Sim", "Não", "Em emissão"], horizontal=True)
-    tem_exames = st.radio("Possui exames que comprovam a necessidade?", ["Sim, atualizados", "Sim, mas antigos", "Não possuo"], horizontal=True)
-    quais_exames = st.text_input("Quais exames você já tem? (Ex: Ressonância, Laudo, Biópsia...)")
-
-    st.divider()
-
-    st.markdown("### 🚨 Gravidade")
-    urgencia = st.selectbox("Seu caso é?", ["Sim, preciso resolver o mais rápido possível", "Pode aguardar alguns dias", "Não é urgente"])
+    st.markdown("### 📄 Documentação e Urgência")
+    tem_relatorio = st.radio("Possui Relatório Médico?", ["Sim", "Não", "Em emissão"], horizontal=True)
+    tem_exames = st.radio("Possui exames atualizados?", ["Sim", "Não"], horizontal=True)
+    urgencia = st.selectbox("Qual a urgência?", ["Imediata", "Pode aguardar", "Não é urgente"])
+    
     detalhes = st.text_area("Explique seu caso resumidamente:")
 
     btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
 
-# 6. PROCESSAMENTO (PLANILHA + E-MAIL)
+# 6. LÓGICA DE PROCESSAMENTO
 if btn_enviar:
-    # Validação dos campos essenciais
     if nome and len(nums) >= 10 and origem and sexo:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
         
@@ -141,14 +134,13 @@ if btn_enviar:
             "Origem": origem,
             "Situacao": situacao,
             "Relatorio": tem_relatorio,
-            "Status_Exames": tem_exames,
-            "Lista_Exames": quais_exames,
+            "Exames": tem_exames,
             "Urgencia": urgencia,
             "Detalhes": detalhes
         }
 
-        with st.spinner('Enviando dados...'):
-            # SALVAR NA PLANILHA CSV
+        with st.spinner('Enviando...'):
+            # SALVAR NA PLANILHA
             arquivo = "leads_completos.csv"
             df_novo = pd.DataFrame([dados_finais])
             if not os.path.isfile(arquivo):
@@ -160,22 +152,18 @@ if btn_enviar:
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            st.success(f"✅ Sucesso! Dra. Lethicia recebeu seus dados e entrará em contato em breve.")
+            st.success(f"✅ Recebido! Dra. Lethicia entrará em contato em breve.")
             st.balloons()
         else:
-            st.error(f"Erro no envio: {erro}")
+            st.error(f"Erro no e-mail: {erro}")
     else:
-        st.warning("⚠️ Por favor, preencha todos os campos do Perfil (Nome, Idade, Sexo e WhatsApp) e o Atendimento.")
+        st.warning("⚠️ Preencha Nome, Idade, Sexo, WhatsApp e Atendimento.")
 
-# 7. ÁREA ADMINISTRATIVA
-with st.expander("📊 Relatório de Público (Uso Interno)"):
+# 7. DASHBOARD ADM
+with st.expander("📊 Relatório de Público (ADM)"):
     if os.path.exists("leads_completos.csv"):
         df_view = pd.read_csv("leads_completos.csv", sep=';')
         st.write(f"Total de Leads: {len(df_view)}")
         
-        c1, c2 = st.columns(2)
-        c1.metric("Média de Idade", f"{int(df_view['Idade'].mean())} anos")
-        c2.write(df_view['Sexo'].value_counts())
-        
         csv_data = df_view.to_csv(index=False, sep=';', encoding='utf-8-sig').encode('utf-8-sig')
-        st.download_button("📥 Baixar Planilha Completa", csv_data, "relatorio_leads.csv", "text/csv")
+        st.download_button("📥 Baixar Planilha", csv_data, "relatorio_leads.csv", "text/csv")
