@@ -143,7 +143,7 @@ with st.form("form_triagem_minimal"):
     st.divider()
     st.subheader("🏥 Atendimento")
     origem = st.radio("Atendimento via:", ["Plano de Saúde", "SUS"], horizontal=True)
-    situacao = st.radio("O que aconteceu?", ["Negativa de tratamento", "Demora na fila", "Já tenho documentos", "Outro"])
+    situacao = st.radio("O que aconteceu?", ["Negativa de tratamento", "Demora na fila", "Demora em marcar consultas/exames", "Outro"])
 
     st.divider()
     st.subheader("📄 Detalhes")
