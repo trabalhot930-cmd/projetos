@@ -15,20 +15,20 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. CSS PARA PADRONIZAÇÃO DE CORES E FUNDO CLARO
+# 2. CSS PARA DESIGN CLEAR (LEVE)
 st.markdown("""
     <style>
-    /* 1. Fundo da página e dos containers sempre claro */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #fdfafb !important;
+    /* Fundo da página sempre claro */
+    .stApp, [data-testid="stAppViewContainer"] {
+        background-color: #ffffff !important;
     }
     
-    /* 2. Forçar todos os textos para cinza escuro/preto */
-    h1, h2, h3, p, span, label, div {
+    /* Cores dos Textos */
+    h1, h2, h3, p, span, label, .stSubheader {
         color: #1a1a1a !important;
     }
 
-    /* 3. Título e Subtítulo */
+    /* Título e Subtítulo */
     .titulo-premium {
         color: #70161e !important;
         font-size: 24px !important;
@@ -44,35 +44,36 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* 4. PADRONIZAÇÃO DO FUNDO DOS ITENS (Inputs, Selects, TextAreas) */
-    /* Isso garante que todos tenham o mesmo fundo branco e bordas suaves */
+    /* PADRONIZAÇÃO DE TODOS OS CAMPOS (Inclusive Idade e Sexo) */
     .stTextInput>div>div>input, 
     .stSelectbox>div>div>div, 
     .stTextArea>div>div>textarea,
     .stNumberInput>div>div>input {
         background-color: #ffffff !important;
         color: #1a1a1a !important;
-        border: 1px solid #eeeeee !important;
+        border: 1px solid #dddddd !important;
         border-radius: 8px !important;
     }
 
-    /* 5. Botão em Vinho/Bordô */
+    /* BOTÃO DE ENVIAR: Versão "Clear" (Fundo claro, borda vinho) */
     div.stButton > button {
-        background-color: #70161e !important;
-        color: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #70161e !important;
+        border: 2px solid #70161e !important;
         border-radius: 8px !important;
-        border: none !important;
-        padding: 15px !important;
+        padding: 12px !important;
         font-weight: bold !important;
         width: 100% !important;
         transition: 0.3s;
     }
+    
+    /* Efeito ao passar o mouse ou clicar no botão */
     div.stButton > button:hover {
-        background-color: #8c1c24 !important;
+        background-color: #70161e !important;
         color: #ffffff !important;
     }
 
-    /* 6. Animação das Borboletas */
+    /* Animação das Borboletas */
     @keyframes flyUp {
         0% { transform: translateY(0) rotate(0deg); opacity: 1; }
         100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
@@ -101,12 +102,12 @@ def enviar_email_gmail(dados):
     msg['Subject'] = f"NOVA TRIAGEM: {dados['Nome']}"
 
     corpo_html = f"""
-    <div style="font-family: sans-serif; color: #333; padding: 20px; border: 1px solid #eee;">
+    <div style="font-family: sans-serif; color: #333; padding: 20px;">
         <h2 style="color: #70161e;">Nova Consulta Recebida</h2>
         <p><b>Data:</b> {dados['Data']}</p>
         <p><b>Cliente:</b> {dados['Nome']} | <b>Idade:</b> {dados['Idade']}</p>
         <p><b>WhatsApp:</b> {dados['WhatsApp']}</p>
-        <hr style="border: 0; border-top: 1px solid #eee;">
+        <hr style="border:0; border-top:1px solid #eee;">
         <p><b>Situação:</b> {dados['Situacao']}</p>
         <p><b>Urgência:</b> {dados['Urgencia']}</p>
         <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
@@ -122,15 +123,15 @@ def enviar_email_gmail(dados):
     except Exception as e:
         return False, str(e)
 
-# 5. FORMULÁRIO (Itens com fundo padronizado)
-with st.form("form_triagem_final"):
+# 5. FORMULÁRIO (Todos os itens com fundo claro)
+with st.form("form_triagem_minimal"):
     st.subheader("👤 Seus Dados")
     nome = st.text_input("Nome completo")
     
-    col_a, col_b = st.columns(2)
-    with col_a:
+    c1, c2 = st.columns(2)
+    with c1:
         idade = st.number_input("Idade", min_value=0, value=30)
-    with col_b:
+    with c2:
         sexo = st.selectbox("Sexo:", ["Feminino", "Masculino", "Outro"], index=None)
     
     tel_raw = st.text_input("WhatsApp (com DDD)", placeholder="91988887777")
@@ -149,10 +150,9 @@ with st.form("form_triagem_final"):
     urgencia = st.select_slider("Qual a urgência?", options=["Baixa", "Média", "Alta"], value="Média")
     detalhes = st.text_area("Resumo do caso (opcional):")
 
-    # Botão de Envio
     btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
 
-# 6. PROCESSAMENTO E BORBOLETAS
+# 6. PROCESSAMENTO
 if btn_enviar:
     if nome and len(nums) >= 10:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -169,7 +169,7 @@ if btn_enviar:
             sucesso, erro = enviar_email_gmail(dados_finais)
 
         if sucesso:
-            # Borboletas voando 🦋
+            # Borboletas 🦋
             for i in range(10, 100, 20):
                 st.markdown(f'<div class="butterfly-anim" style="left:{i}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
             st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
@@ -177,4 +177,4 @@ if btn_enviar:
         else:
             st.error(f"Erro: {erro}")
     else:
-        st.warning("⚠️ Preencha Nome e WhatsApp corretamente.")
+        st.warning("⚠️ Preencha Nome e WhatsApp.")
