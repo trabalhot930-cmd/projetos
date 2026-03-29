@@ -1,180 +1,151 @@
 import streamlit as st
 import smtplib
-import re
-import pandas as pd
-import os
-import time
-from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # 1. CONFIGURAÇÃO DA PÁGINA
-st.set_page_config(
-    page_title="Triagem Jurídica - Dra. Lethicia Fernanda",
-    page_icon="🦋",
-    layout="centered"
-)
+st.set_page_config(page_title="Triagem Jurídica - Dra. Lethicia Fernanda", page_icon="🦋")
 
-# 2. CSS PARA DESIGN CLEAR (LEVE)
+# 2. ESTILO PREMIUM BORDÔ
 st.markdown("""
     <style>
-    /* Fundo da página sempre claro */
-    .stApp, [data-testid="stAppViewContainer"] {
-        background-color: #ffffff !important;
+    .stApp { background-color: #fdfafb; }
+    .header-bordo {
+        background: linear-gradient(90deg, #70161e, #8c1c24);
+        padding: 40px; text-align: center; border-radius: 15px; margin-bottom: 25px;
     }
-    
-    /* Cores dos Textos */
-    h1, h2, h3, p, span, label, .stSubheader {
-        color: #1a1a1a !important;
+    .stButton>button {
+        width: 100%; background-color: #70161e; color: white; 
+        font-weight: bold; padding: 18px; border-radius: 10px; border: none;
     }
-
-    /* Título e Subtítulo */
-    .titulo-premium {
-        color: #70161e !important;
-        font-size: 24px !important;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 5px;
-    }
-    .subtitulo-premium {
-        color: #8c1c24 !important;
-        font-size: 11px !important;
-        text-align: center;
-        letter-spacing: 1px;
-        margin-bottom: 20px;
-    }
-
-    /* PADRONIZAÇÃO DE TODOS OS CAMPOS (Inclusive Idade e Sexo) */
-    .stTextInput>div>div>input, 
-    .stSelectbox>div>div>div, 
-    .stTextArea>div>div>textarea,
-    .stNumberInput>div>div>input {
-        background-color: #ffffff !important;
-        color: #1a1a1a !important;
-        border: 1px solid #dddddd !important;
-        border-radius: 8px !important;
-    }
-
-    /* BOTÃO DE ENVIAR: Versão "Clear" (Fundo claro, borda vinho) */
-    div.stButton > button {
-        background-color: #ffffff !important;
-        color: #70161e !important;
-        border: 2px solid #70161e !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        font-weight: bold !important;
-        width: 100% !important;
-        transition: 0.3s;
-    }
-    
-    /* Efeito ao passar o mouse ou clicar no botão */
-    div.stButton > button:hover {
-        background-color: #70161e !important;
-        color: #ffffff !important;
-    }
-
-    /* Animação das Borboletas */
-    @keyframes flyUp {
-        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-        100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
-    }
-    .butterfly-anim {
-        position: fixed; font-size: 40px; z-index: 9999;
-        animation: flyUp 4s linear forwards;
-    }
+    h3 { color: #70161e !important; padding-top: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
 # 3. CABEÇALHO
-st.markdown('<p class="titulo-premium">Dra. Lethicia Fernanda 🦋</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitulo-premium">ADVOCACIA ESPECIALIZADA EM DIREITO DA SAÚDE</p>', unsafe_allow_html=True)
-st.divider()
+st.markdown("""
+    <div class="header-bordo">
+        <h1 style='color: white; margin:0; font-family: serif;'>Dra. Lethicia Fernanda 🦋</h1>
+        <p style='color: #f3dede; font-size: 14px; letter-spacing: 1px;'>ADVOCACIA ESPECIALIZADA EM DIREITO DA SAÚDE</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# 4. FUNÇÃO DE ENVIO DE E-MAIL
-def enviar_email_gmail(dados):
-    remetente = "lethiciafernanda14@gmail.com"
-    senha_app = "ozmj zrks dnkk ymks" 
+# 4. FUNÇÃO DE ENVIO DE E-MAIL (SMTP)
+def enviar_email_lead(dados):
+    remetente = "lethiciafernanda.adv@outlook.com"
+    senha_app = "SUA_SENHA_DE_APP_GERADA_AQUI"  # coloque aqui sua senha de app
     destinatario = "lethiciafernanda.adv@outlook.com"
 
     msg = MIMEMultipart()
     msg['From'] = remetente
     msg['To'] = destinatario
-    msg['Subject'] = f"NOVA TRIAGEM: {dados['Nome']}"
+
+    # 🔥 ASSUNTO MELHORADO
+    msg['Subject'] = f"TRIAGEM | {dados['origem']} | {dados['nome']}"
 
     corpo_html = f"""
-    <div style="font-family: sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #70161e;">Nova Consulta Recebida</h2>
-        <p><b>Data:</b> {dados['Data']}</p>
-        <p><b>Cliente:</b> {dados['Nome']} | <b>Idade:</b> {dados['Idade']}</p>
-        <p><b>WhatsApp:</b> {dados['WhatsApp']}</p>
-        <hr style="border:0; border-top:1px solid #eee;">
-        <p><b>Situação:</b> {dados['Situacao']}</p>
-        <p><b>Urgência:</b> {dados['Urgencia']}</p>
-        <p><b>Resumo:</b><br>{dados['Detalhes']}</p>
-    </div>
+    <h2 style="color:#70161e;">📋 Nova Triagem Recebida</h2>
+
+    <p style="font-size:18px; color:#70161e;"><b>📌 Tipo de Atendimento:</b> {dados['origem']}</p>
+
+    <hr>
+
+    <h3>👤 Dados do Cliente</h3>
+    <p><b>Nome:</b> {dados['nome']}</p>
+    <p><b>WhatsApp:</b> {dados['whatsapp']}</p>
+    <p><b>Localidade:</b> {dados['localidade']}</p>
+
+    <hr>
+
+    <h3>🏥 Informações do Caso</h3>
+    <p><b>Situação:</b> {dados['situacao']}</p>
+    <p><b>Relatório Médico/Urgência:</b> {dados['relatorio']}</p>
+
+    <hr>
+
+    <h3>📄 Exames</h3>
+    <p><b>Status dos Exames:</b> {dados['exames_status']}</p>
+    <p><b>Exames que possui:</b> {dados['exames_lista']}</p>
+
+    <hr>
+
+    <h3>🚨 Gravidade</h3>
+    <p><b>Urgência:</b> {dados['urgencia']}</p>
+
+    <hr>
+
+    <h3>📝 Resumo do Caso</h3>
+    <p>{dados['detalhes']}</p>
     """
+
     msg.attach(MIMEText(corpo_html, 'html'))
+
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP('smtp.office365.com', 587)
+        server.starttls()
         server.login(remetente, senha_app)
         server.send_message(msg)
         server.quit()
-        return True, "Ok"
+        return True
     except Exception as e:
-        return False, str(e)
+        print(e)
+        return False
 
-# 5. FORMULÁRIO (Todos os itens com fundo claro)
-with st.form("form_triagem_minimal"):
-    st.subheader("👤 Seus Dados")
+# 5. FORMULÁRIO
+with st.form("form_triagem"):
+    st.markdown("### 📌 Seus Dados")
     nome = st.text_input("Nome completo")
-    
-    c1, c2 = st.columns(2)
-    with c1:
-        idade = st.number_input("Idade", min_value=0, value=30)
-    with c2:
-        sexo = st.selectbox("Sexo:", ["Feminino", "Masculino", "Outro"], index=None)
-    
-    tel_raw = st.text_input("WhatsApp (com DDD)", placeholder="91988887777")
+    whatsapp_cliente = st.text_input("WhatsApp com DDD")
     localidade = st.text_input("Cidade e Estado")
     
-    nums = re.sub(r'\D', '', tel_raw)
-    whatsapp_formatado = f"({nums[:2]}) {nums[2:7]}-{nums[7:]}" if len(nums) >= 10 else nums
+    st.divider()
+
+    st.markdown("### 🏥 Sobre o Atendimento")
+    origem = st.radio("Seu atendimento é via:", ["Plano de Saúde", "SUS"], index=None)
+    situacao = st.radio("O que aconteceu?", [
+        "Negativa de tratamento/cirurgia", 
+        "Demora excessiva na fila",
+        "Já tenho tudo pronto e preciso entrar com o processo",
+        "Outro"
+    ], index=None)
 
     st.divider()
-    st.subheader("🏥 Atendimento")
-    origem = st.radio("Atendimento via:", ["Plano de Saúde", "SUS"], horizontal=True)
-    situacao = st.radio("O que aconteceu?", ["Negativa de Tratamento", "Aguardando Cirurgia", "Demora em marcar Consultas/Exames", "Outro"])
+
+    st.markdown("### 📄 Documentação e Exames")
+    tem_relatorio = st.radio("Possui Relatório Médico ou Pedido de Urgência?", ["Sim", "Não", "Em emissão"])
+    tem_exames = st.radio("Possui exames que comprovam a necessidade?", ["Sim, atualizados", "Sim, mas antigos", "Não possuo"])
+    quais_exames = st.text_input("Quais exames você já tem?")
 
     st.divider()
-    st.subheader("📄 Detalhes")
-    urgencia = st.select_slider("Qual a urgência?", options=["Baixa", "Média", "Alta"], value="Média")
-    detalhes = st.text_area("Resumo do caso (opcional):")
 
-    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE 🦋")
+    st.markdown("### 🚨 Gravidade")
+    urgencia = st.selectbox("Qual a urgência do caso?", ["Imediata", "Pode aguardar alguns dias", "Não é urgente"])
+    detalhes = st.text_area("Explique seu caso resumidamente:")
 
-# 6. PROCESSAMENTO
+    btn_enviar = st.form_submit_button("ENVIAR PARA ANÁLISE ESPECIALIZADA 🦋")
+
+# 6. LÓGICA FINAL
 if btn_enviar:
-    if nome and len(nums) >= 10:
-        agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-        dados_finais = {"Data": agora, "Nome": nome, "Idade": idade, "Sexo": sexo, "WhatsApp": whatsapp_formatado, "Localidade": localidade, "Origem": origem, "Situacao": situacao, "Urgencia": urgencia, "Detalhes": detalhes}
+    if nome and whatsapp_cliente and origem:
+        dados_finais = {
+            "nome": nome,
+            "whatsapp": whatsapp_cliente,
+            "localidade": localidade,
+            "origem": origem,
+            "situacao": situacao,
+            "relatorio": tem_relatorio,
+            "exames_status": tem_exames,
+            "exames_lista": quais_exames,
+            "urgencia": urgencia,
+            "detalhes": detalhes
+        }
 
-        with st.spinner('Enviando...'):
-            arquivo = "leads_completos.csv"
-            df_novo = pd.DataFrame([dados_finais])
-            if not os.path.isfile(arquivo):
-                df_novo.to_csv(arquivo, index=False, sep=';', encoding='utf-8-sig')
-            else:
-                df_novo.to_csv(arquivo, mode='a', index=False, sep=';', encoding='utf-8-sig', header=False)
-            
-            sucesso, erro = enviar_email_gmail(dados_finais)
+        with st.spinner('Enviando seus dados...'):
+            enviou = enviar_email_lead(dados_finais)
 
-        if sucesso:
-            # Borboletas 🦋
-            for i in range(10, 100, 20):
-                st.markdown(f'<div class="butterfly-anim" style="left:{i}%; bottom:-10%;">🦋</div>', unsafe_allow_html=True)
-            st.success("✅ Recebido! Dra. Lethicia entrará em contato em breve.")
-            time.sleep(3)
+        if enviou:
+            st.success(f"✅ Obrigado, {nome}! Seus dados foram enviados com sucesso. Aguarde o retorno.")
         else:
-            st.error(f"Erro: {erro}")
+            st.error("❌ Erro ao enviar. Tente novamente.")
     else:
-        st.warning("⚠️ Preencha Nome e WhatsApp.")
+        st.error("⚠️ Preencha Nome, WhatsApp e Tipo de Atendimento.")
