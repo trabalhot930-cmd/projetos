@@ -40,7 +40,7 @@ if logo_b64:
         background-size: 55%;
         background-repeat: no-repeat;
         background-position: center bottom 20px;
-        opacity: 0.07;
+        opacity: 0.50;
         pointer-events: none;
         z-index: 0;
         border-radius: 12px;
@@ -246,7 +246,7 @@ with st.form("form_triagem_completo"):
 
 # 7. PROCESSAMENTO
 if btn_enviar:
-    if nome and len(nums) >= 10 and origem and situacao:
+    if nome and len(nums) >= 10 and origem and situacao and interesse:
         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
 
         dados_finais = {
@@ -276,4 +276,4 @@ if btn_enviar:
         else:
             st.error(f"Erro no envio: {erro}")
     else:
-        st.warning("⚠️ Preencha os campos obrigatórios (Nome, WhatsApp, Atendimento e Situação).")
+        st.warning("⚠️ Preencha os campos obrigatórios (Nome, WhatsApp, Atendimento, Situação e Interesse em Contratar).")
